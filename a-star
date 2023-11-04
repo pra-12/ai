@@ -1,0 +1,75 @@
+from typing import Dict
+
+class Graph:
+    def __init__(self, adjacency_list: Dict[str, list]):
+        self.adjacency_list = adjacency_list
+
+    def get_neighbors(self, node: str) -> list:
+        return self.adjacency_list[node]
+
+    def heuristic(self, node: str) -> int:
+        # Modify the heuristic function if needed
+        return 1
+
+    def a_star_algorithm(self, start_node: str, stop_node: str) -> list:
+        open_set = {start_node}
+        closed_set = set()
+        g = {start_node: 0}
+        parents = {start_node: start_node}
+
+        while open_set:
+            current_node = min(open_set, key=lambda node: g[node] + self.heuristic(node))
+
+            if current_node == stop_node:
+                return self.reconstruct_path(parents, start_node, stop_node)
+
+            open_set.remove(current_node)
+            closed_set.add(current_node)
+
+            for neighbor, weight in self.get_neighbors(current_node):
+                if neighbor in closed_set:
+                    continue
+
+                tentative_g = g[current_node] + weight
+
+                if neighbor not in open_set or tentative_g < g[neighbor]:
+                    g[neighbor] = tentative_g
+                    parents[neighbor] = current_node
+
+                    open_set.add(neighbor)
+
+        raise ValueError("Path does not exist!")
+
+    def reconstruct_path(self, parents: Dict[str, str], start_node: str, stop_node: str) -> list:
+        path = [stop_node]
+        while path[-1] != start_node:
+            path.append(parents[path[-1]])
+        return list(reversed(path))
+
+def get_user_input():
+    adjacency_list = {}
+    num_edges = int(input("Enter the number of edges: "))
+
+    for _ in range(num_edges):
+        source, dest, weight = input("Enter edge (source dest weight): ").split()
+        weight = int(weight)
+        if source not in adjacency_list:
+            adjacency_list[source] = []
+        adjacency_list[source].append((dest, weight))
+
+    start_node = input("Enter the start node: ")
+    stop_node = input("Enter the stop node: ")
+
+    return adjacency_list, start_node, stop_node
+
+if __name__ == "__main__":
+    graph_input, start_input, stop_input = get_user_input()
+
+    graph = Graph(graph_input)
+
+    try:
+        result = graph.a_star_algorithm(start_input, stop_input)
+        if result:
+            print('Path found:', result)
+    except ValueError as e:
+        print(e)
