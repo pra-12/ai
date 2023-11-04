@@ -1,73 +1,84 @@
-class Graph:
-    def __init__(self, vertices):
-        self.vertices = vertices
-        self.graph = [[0 for _ in range(vertices)] for _ in range(vertices)]
+class GraphColoring:
+    def __init__(self, graph, colors):
+        self.graph = graph
+        self.num_nodes = len(graph)
+        self.colors = [''] * self.num_nodes
+        self.available_colors = colors
+        self.min_colors = self.num_nodes
+        self.best_colors = []
 
-    def is_safe(self, vertex, c, color):
-        for i in range(self.vertices):
-            if self.graph[vertex][i] == 1 and color[i] == c:
+    def is_safe(self, vertex, color):
+        for i in range(self.num_nodes):
+            if self.graph[vertex][i] == 1 and self.colors[i] == color:
                 return False
         return True
 
-    def graph_coloring_backtracking(self, m, color, v):
-        if v == self.vertices:
-            return True
+    def backtracking(self, vertex):
+        if vertex == self.num_nodes:
+            if len(set(self.colors)) < self.min_colors:
+                self.min_colors = len(set(self.colors))
+                self.best_colors = self.colors.copy()
+            return
 
-        for c in range(1, m + 1):
-            if self.is_safe(v, c, color):
-                color[v] = c
-                if self.graph_coloring_backtracking(m, color, v + 1):
-                    return True
-                color[v] = 0
+        for color in self.available_colors:
+            if self.is_safe(vertex, color):
+                self.colors[vertex] = color
+                self.backtracking(vertex + 1)
+                self.colors[vertex] = ''
 
-        return False
+    def branch_and_bound(self, vertex):
+        if vertex == self.num_nodes:
+            num_colors = len(set(self.colors))
+            if num_colors < self.min_colors:
+                self.min_colors = num_colors
+                self.best_colors = self.colors.copy()
+            return
 
-    def graph_coloring_branch_and_bound(self, m, color, v, min_color):
-        if v == self.vertices:
-            return True
+        for color in self.available_colors:
+            if self.is_safe(vertex, color):
+                original_color = self.colors[vertex]
+                self.colors[vertex] = color
 
-        for c in range(1, m + 1):
-            if self.is_safe(v, c, color):
-                color[v] = c
-                next_min_color = min_color
-                if c > min_color:
-                    next_min_color = c
-                if self.graph_coloring_branch_and_bound(m, color, v + 1, next_min_color):
-                    return True
-                color[v] = 0
+                min_colors_estimate = self.estimate_min_colors(vertex + 1)
+                if min_colors_estimate < self.min_colors:
+                    self.branch_and_bound(vertex + 1)
 
-        return False
+                self.colors[vertex] = original_color
 
-    def graph_coloring(self, m, use_branch_and_bound=False):
-        color = [0] * self.vertices
-        min_color = 1
+    def estimate_min_colors(self, vertex):
+        for i in range(vertex, self.num_nodes):
+            self.colors[i] = ''
 
-        if use_branch_and_bound:
-            return self.graph_coloring_branch_and_bound(m, color, 0, min_color)
-        else:
-            return self.graph_coloring_backtracking(m, color, 0)
+        for i in range(self.num_nodes - 1, -1, -1):
+            if self.colors[i] == '':
+                available_colors = set(self.available_colors)
+                for j in range(self.num_nodes):
+                    if self.graph[i][j] == 1 and self.colors[j] != '':
+                        available_colors.discard(self.colors[j])
+                if available_colors:
+                    self.colors[i] = available_colors.pop()
 
+        return len(set(self.colors))
 
-def get_graph_input():
-    vertices = int(input("Enter the number of vertices in the graph: "))
-    g = Graph(vertices)
+    def solve(self):
+        self.backtracking(0)
+        self.colors = [''] * self.num_nodes
+        self.branch_and_bound(0)
 
-    print("Enter the adjacency matrix (1 for connected, 0 for not connected):")
-    for i in range(vertices):
-        row = list(map(int, input().split()))
-        g.graph[i] = row
+        return self.min_colors, self.best_colors
 
-    return g
+if __name__ == '__main__':
+    # Take user input for the graph
+    num_nodes = int(input("Enter the number of nodes: "))
+    graph = [[0] * num_nodes for _ in range(num_nodes)]
+    for i in range(num_nodes):
+        graph[i] = list(map(int, input(f"Enter adjacency matrix for node {i + 1}: ").split()))
 
+    # Take user input for the colors
+    colors = input("Enter the colors (separated by space): ").split()
 
-# Example usage with user input:
-g = get_graph_input()
+    coloring_problem = GraphColoring(graph, colors)
+    min_colors, best_colors = coloring_problem.solve()
 
-colors = int(input("Enter the number of colors: "))
-use_branch_and_bound = True  # Set to True for using Branch and Bound, False for Backtracking
-
-if g.graph_coloring(colors, use_branch_and_bound):
-    print("Graph can be colored with at most", colors, "colors.")
-    print("Color assignment:", g.graph)
-else:
-    print("Graph cannot be colored with at most", colors, "colors.")
+    print("Minimum number of colors:", min_colors)
+    print("Coloring:", best_colors)
