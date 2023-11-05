@@ -17,10 +17,10 @@ def astar(graph, start, goal):
             path.append(start)
             return list(reversed(path))
         
-        for neighbor, cost in graph[current_node].items():
+        for neighbor, cost in graph.get(current_node, {}).items():
             tentative_g_score = g_score[current_node] + cost
             
-            if tentative_g_score < g_score[neighbor]:
+            if tentative_g_score < g_score.get(neighbor, float('inf')):
                 came_from[neighbor] = current_node
                 g_score[neighbor] = tentative_g_score
                 f_score = tentative_g_score + heuristic(neighbor, goal)
@@ -42,6 +42,9 @@ def get_user_input():
 
         if source not in graph:
             graph[source] = {}
+        if dest not in graph:
+            graph[dest] = {}
+
         graph[source][dest] = cost
 
     start_node = input("Enter the start node: ")
@@ -58,15 +61,3 @@ if __name__ == "__main__":
         print("Shortest path:", path)
     else:
         print("No path found")
-'''# Example Input:
-Enter the number of edges: 8
-Enter edge (source dest cost): A B 1
-Enter edge (source dest cost): A D 3
-Enter edge (source dest cost): B A 1
-Enter edge (source dest cost): B D 4
-Enter edge (source dest cost): B E 2
-Enter edge (source dest cost): C E 5
-Enter edge (source dest cost): D A 3
-Enter edge (source dest cost): D B 4
-Enter the start node: A
-Enter the goal node: C '''
