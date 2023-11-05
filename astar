@@ -58,3 +58,15 @@ if __name__ == "__main__":
         print("Shortest path:", path)
     else:
         print("No path found")
+'''# Example Input:
+Enter the number of edges: 8
+Enter edge (source dest cost): A B 1
+Enter edge (source dest cost): A D 3
+Enter edge (source dest cost): B A 1
+Enter edge (source dest cost): B D 4
+Enter edge (source dest cost): B E 2
+Enter edge (source dest cost): C E 5
+Enter edge (source dest cost): D A 3
+Enter edge (source dest cost): D B 4
+Enter the start node: A
+Enter the goal node: C '''
